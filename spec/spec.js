@@ -201,6 +201,7 @@ describe("$.serializeJSON", function () {
     });
   });
 
+
   // options
   describe('options', function() {
     beforeEach(function() {
@@ -417,28 +418,50 @@ describe("$.serializeJSON", function () {
           })
         });
       }
-
-      it('works on a list of checkboxes', function() {
-        $form = $('<form>');
-        $form.append($('<input type="text"     name="form[title]"   value="list of checkboxes"/>'));
-        $form.append($('<input type="checkbox" name="form[check][]" value="true" checked/>'));
-        $form.append($('<input type="checkbox" name="form[check][]" value="true"/>'));
-        $form.append($('<input type="checkbox" name="form[check][]" value="true" data-unchecked-value="NOPE"/>'));
-        obj = $form.serializeJSON({checkboxUncheckedValue: 'false'});
-        expect(obj).toEqual({
-          form: {
-            title: 'list of checkboxes',
-            check: ['true', 'false', 'NOPE']
-          }
+      describe('checkbox lists', function() {
+        it('should be treated as list of values', function() {
+          $form = $('<form>');
+          $form.append($('<input type="checkbox" name="flags[]" value="green"/>'));
+          $form.append($('<input type="checkbox" name="flags[]" value="red" checked/>'));
+          obj = $form.serializeJSON();
+          expect(obj).toEqual({flags: ['red']});
         });
+        it('should be ignored if unchecked', function() {
+          $form = $('<form>');
+          $form.append($('<input type="checkbox" name="flags[]" value="green"/>'));
+          $form.append($('<input type="checkbox" name="flags[]" value="red"/>'));
+          obj = $form.serializeJSON();
+          expect(obj).toEqual({});
+        });
+        it('should be treated as list of values if `checkboxUncheckedValue` is truthy', function() {
+          $form = $('<form>');
+          $form.append($('<input type="text"     name="form[title]"   value="list of checkboxes"/>'));
+          $form.append($('<input type="checkbox" name="form[check][]" value="true" checked/>'));
+          $form.append($('<input type="checkbox" name="form[check][]" value="true"/>'));
+          $form.append($('<input type="checkbox" name="form[check][]" value="true" data-unchecked-value="NOPE"/>'));
+          obj = $form.serializeJSON({checkboxUncheckedValue: 'false'});
+          expect(obj).toEqual({
+            form: {
+              title: 'list of checkboxes',
+              check: ['true']
+            }
+          });
 
-        // also with parse options
-        obj = $form.serializeJSON({checkboxUncheckedValue: 'false', parseBooleans: true});
-        expect(obj).toEqual({
-          form: {
-            title: 'list of checkboxes',
-            check: [true, false, 'NOPE']
-          }
+          // also with parse options
+          obj = $form.serializeJSON({checkboxUncheckedValue: 'false', parseBooleans: true});
+          expect(obj).toEqual({
+            form: {
+              title: 'list of checkboxes',
+              check: [true]
+            }
+          });
+        });
+        it('should be create an empty array if all is unchecked and `checkboxUncheckedValue` exists', function() {
+          $form = $('<form>');
+          $form.append($('<input type="checkbox" name="flags[]" value="green"/>'));
+          $form.append($('<input type="checkbox" name="flags[]" value="red"/>'));
+          obj = $form.serializeJSON({checkboxUncheckedValue: false});
+          expect(obj).toEqual({flags: []});
         });
       });
     });
