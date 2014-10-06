@@ -164,9 +164,20 @@
       }
     },
 
+    formAsArrayContainsName: function(array, name) {
+      var len = array.length;
+      var altName = name + '[]';
+      for (var i = 0; i < array.length; i++) {
+        if (array[i].name === name || array[i].name === altName) {
+          return true
+        }
+      }
+      return false;
+    },
+
     // Fill the formAsArray object with values for the unchecked checkbox inputs,
     // using the same format as the jquery.serializeArray function.
-    // The value of the uncheked values is determined from the opts.checkboxUncheckedValue
+    // The value of the unchecked values is determined from the opts.checkboxUncheckedValue
     // and/or the data-unchecked-value attribute of the inputs.
     readCheckboxUncheckedValues: function (formAsArray, $form, opts) {
       var selector, $uncheckedCheckboxes, $el, dataUncheckedValue, f;
@@ -174,9 +185,21 @@
       f = $.serializeJSON;
 
       selector = 'input[type=checkbox][name]:not(:checked)';
+
       $uncheckedCheckboxes = $form.find(selector).add($form.filter(selector));
       $uncheckedCheckboxes.each(function (i, el) {
         $el = $(el);
+        if (!f.isUndefined(opts.checkboxUncheckedValue) && el.name.substr(-2, 2) === '[]') {
+          // @see https://github.com/marioizquierdo/jquery.serializeJSON/issues/25
+          var arrayName = el.name.substr(0, el.name.length - 2);
+          if (!serializeJSON.formAsArrayContainsName(formAsArray, arrayName)) {
+            formAsArray.push({
+              name: arrayName,
+              value: []
+            });
+          }
+          return;
+        }
         dataUncheckedValue = $el.attr('data-unchecked-value');
         if(dataUncheckedValue) { // data-unchecked-value has precedence over option opts.checkboxUncheckedValue
           formAsArray.push({name: el.name, value: dataUncheckedValue});
