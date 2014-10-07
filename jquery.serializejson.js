@@ -10,6 +10,11 @@
 (function ($) {
   "use strict";
 
+  // tiny jQuery plugin to check if a data attr exists
+  $.fn.hasData = function(key) {
+    return (typeof $(this).data(key) != 'undefined');
+  };
+
   // jQuery('form').serializeJSON()
   $.fn.serializeJSON = function (options) {
     var serializedObject, formAsArray, keys, value, f, opts;
@@ -71,6 +76,23 @@
       if (opts.parseNulls    && str == "null") return null; // null
       return str; // otherwise, keep same string
     },
+    
+
+    // Convert the string to a number, boolean or null, depending on the enable option and the string format.
+    parseInputValue: function($input, opts) {
+      var str, inputOpts, f;
+      str = $input.val();
+      f = $.serializeJSON;
+      inputOpts = $.extend({}, opts);
+
+      // override options 
+      if ($input.hasData('parse-numbers'))  inputOpts.parseNumbers   = $input.data('parse-numbers');
+      if ($input.hasData('parse-booleans')) inputOpts.parseBooleans  = $input.data('parse-booleans');
+      if ($input.hasData('parse-nulls'))    inputOpts.parseNulls     = $input.data('parse-nulls');
+
+      return f.parseValue(str, inputOpts); // otherwise, keep same string
+    },
+
 
     isObject:          function(obj) { return obj === Object(obj); }, // is this variable an object?
     isUndefined:       function(obj) { return obj === void 0; }, // safe check for undefined values
@@ -177,9 +199,9 @@
       $uncheckedCheckboxes = $form.find(selector).add($form.filter(selector));
       $uncheckedCheckboxes.each(function (i, el) {
         $el = $(el);
-        dataUncheckedValue = $el.attr('data-unchecked-value');
-        if(dataUncheckedValue) { // data-unchecked-value has precedence over option opts.checkboxUncheckedValue
-          formAsArray.push({name: el.name, value: dataUncheckedValue});
+        if($el.hasData('unchecked-value')) { 
+          // data-unchecked-value has precedence over option opts.checkboxUncheckedValue
+          formAsArray.push({name: el.name, value: $el.data('unchecked-value')});
         } else {
           if (!f.isUndefined(opts.checkboxUncheckedValue)) {
             formAsArray.push({name: el.name, value: opts.checkboxUncheckedValue});
