@@ -581,6 +581,46 @@ describe("$.serializeJSON", function () {
         });
       });
     });
+
+    describe('can be overridden with data attributes', function() {
+      it('`parse-numbers`', function() {
+        $form = $('<form>');
+        $form.append($('<input type="text"  name="Numeric 0" value="0"/>'));
+        $form.append($('<input type="text"  name="Numeric 1" value="1" data-parse-numbers="false" />'));
+
+        obj = $form.serializeJSON({parseNumbers: true});
+        expect(obj).toEqual({
+          "Numeric 0":      0,
+          "Numeric 1":      '1'
+        });
+      });
+
+      it('`parse-boolean`', function() {
+        $form = $('<form>');
+        $form.append($('<input type="text" name="Bool true"     value="true"/>'));
+        $form.append($('<input type="text" name="Bool false"    value="false" data-parse-booleans="false"/>'));
+
+        obj = $form.serializeJSON({parseBooleans: true});
+        expect(obj).toEqual({
+          "Bool true":      true,
+          "Bool false":     'false'
+        });
+      });
+
+      it('`parse-null`', function() {
+        $form = $('<form>');
+        $form.append($('<input type="text" name="Null"          value="null"/>'));
+        $form.append($('<input type="text" name="Null2"         value="null" data-parse-nulls="false"/>'));
+
+        obj = $form.serializeJSON({parseNulls: true});
+        expect(obj).toEqual({
+          "Null":      null,
+          "Null2":     'null'
+        });
+      });
+
+    });
+
   });
 });
 
